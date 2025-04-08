@@ -1,7 +1,24 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const suits = ['♠', '♥', '♦', '♣'];
 const values = Array.from({ length: 13 }, (_, i) => i + 2);
+const valueToDisplay = (value) => {
+  if (value === 11) return 'J';
+  if (value === 12) return 'Q';
+  if (value === 13) return 'K';
+  if (value === 14) return 'A';
+  return value.toString();
+};
+
+const getSuitColor = (suit) => {
+  switch (suit) {
+    case '♠': return 'text-blue-400';
+    case '♥': return 'text-red-400';
+    case '♦': return 'text-pink-400';
+    case '♣': return 'text-green-400';
+    default: return 'text-white';
+  }
+};
 
 const generateDeck = () =>
   suits.flatMap(suit => values.map(value => ({ suit, value })))
@@ -14,6 +31,20 @@ export default function App() {
   const [blackPos, setBlackPos] = useState(0);
   const [lastCard, setLastCard] = useState(null);
   const [winner, setWinner] = useState(null);
+  const [bet, setBet] = useState('');
+  const [countdown, setCountdown] = useState(10);
+  const [isCounting, setIsCounting] = useState(false);
+
+  useEffect(() => {
+    let timer;
+    if (isCounting && countdown > 0) {
+      timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+    } else if (countdown === 0) {
+      startGame();
+      setIsCounting(false);
+    }
+    return () => clearTimeout(timer);
+  }, [countdown, isCounting]);
 
   const drawCard = () => {
     if (!deck.length || winner) return;
@@ -23,7 +54,9 @@ export default function App() {
       !lastCard || next.value >= lastCard.value ||
       (['♥', '♦'].includes(lastCard.suit) ? 'red' : 'black') === color;
 
-    const logText = `${next.suit}${next.value} → ${canMove ? color.toUpperCase() + ' +1' : 'No move'}`;
+    const display = `${next.suit}${valueToDisplay(next.value)}`;
+    const suitClass = getSuitColor(next.suit);
+    const logText = `<span class="${suitClass}">${display}</span> → ${canMove ? color.toUpperCase() + ' +1' : 'No move'}`;
     setLog(prev => [...prev, logText]);
     setLastCard(next);
     setDeck(rest);
@@ -38,13 +71,18 @@ export default function App() {
     }
   };
 
+  const startCountdown = () => {
+    setCountdown(10);
+    setIsCounting(true);
+  };
+
   const startGame = () => {
     setDeck(generateDeck());
     setRedPos(0);
     setBlackPos(0);
     setLastCard(null);
     setWinner(null);
-    setLog(['🏁 Race Started!']);
+    setLog([`🏁 Race Started! Bet: ${bet.toUpperCase()}`]);
   };
 
   const Track = ({ position, color }) => (
@@ -62,13 +100,30 @@ export default function App() {
       <h1 className="text-3xl text-center text-yellow-300 font-bold mb-4">Royal Derby</h1>
       <Track position={redPos} color="red" />
       <Track position={blackPos} color="black" />
+
+      <div className="flex justify-center gap-2 mb-4">
+        <input
+          type="text"
+          placeholder="Bet on RED or BLACK"
+          value={bet}
+          onChange={(e) => setBet(e.target.value)}
+          className="text-black px-2 py-1 rounded"
+        />
+        <button onClick={startCountdown} className="bg-yellow-400 text-black px-4 py-2 rounded">
+          Start Betting
+        </button>
+      </div>
+
+      {isCounting && <p className="text-center text-lg text-red-400">Countdown: {countdown}s</p>}
+
       <div className="flex gap-2 justify-center my-4">
-        <button onClick={startGame} className="bg-yellow-400 text-black px-4 py-2 rounded">New Race</button>
         <button onClick={drawCard} className="bg-white text-black px-4 py-2 rounded">Draw Card</button>
       </div>
+
       {winner && <p className="text-center text-2xl font-bold">{winner.toUpperCase()} Wins!</p>}
+
       <div className="bg-black mt-4 p-2 rounded h-40 overflow-y-auto text-green-400 text-sm">
-        {log.map((line, i) => <div key={i}>{line}</div>)}
+        {log.map((line, i) => <div key={i} dangerouslySetInnerHTML={{ __html: line }} />)}
       </div>
     </div>
   );
