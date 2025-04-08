@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 
 const suits = ['♠', '♥', '♦', '♣'];
@@ -53,7 +52,7 @@ export default function App() {
   useEffect(() => {
     let auto;
     if (deck.length > 0 && !winner) {
-      auto = setTimeout(drawCard, 1200);
+      auto = setTimeout(drawCard, 1000);
     }
     return () => clearTimeout(auto);
   }, [deck, winner]);
@@ -100,74 +99,79 @@ export default function App() {
   const Track = ({ position, color }) => (
     <div className="flex gap-2 items-center mb-2">
       {[0, 1, 2, 3, 4].map(i => (
-        <div key={i} className="w-10 h-10 bg-green-700 border flex items-center justify-center">
-          {i === position && <span className="text-xl">{color === 'red' ? '🐎' : '🏇'}</span>}
+        <div key={i} className="w-16 h-16 bg-green-800 border-2 rounded flex items-center justify-center shadow-lg">
+          {i === position && (
+            <span className={`text-lg font-black ${color === 'red' ? 'text-red-400' : 'text-gray-300'}`}>
+              {color === 'red' ? 'RED HORSE' : 'BLACK HORSE'}
+            </span>
+          )}
         </div>
       ))}
     </div>
   );
 
   return (
-    <div className="p-4 max-w-lg mx-auto text-white">
-      <h1 className="text-3xl text-center text-yellow-300 font-bold mb-4">Royal Derby</h1>
-      <Track position={redPos} color="red" />
-      <Track position={blackPos} color="black" />
+    <div className="min-h-screen bg-gradient-to-br from-green-900 via-green-800 to-green-900 p-6 text-white font-mono">
+      <div className="max-w-2xl mx-auto bg-green-950 shadow-xl rounded-xl p-6 border border-yellow-300">
+        <h1 className="text-4xl text-center text-yellow-400 font-bold mb-6 drop-shadow">ROYAL DERBY</h1>
+        <Track position={redPos} color="red" />
+        <Track position={blackPos} color="black" />
 
-      <div className="grid grid-cols-2 gap-4 mb-4">
-        <div>
-          <label className="block text-sm mb-1">Red Bet</label>
-          <input
-            type="number"
-            placeholder="Enter Red Bet"
-            value={betRed}
-            onChange={(e) => setBetRed(e.target.value)}
-            className="text-black px-2 py-1 rounded w-full"
-          />
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div>
+            <label className="block text-sm mb-1 text-yellow-200">Red Bet</label>
+            <input
+              type="number"
+              placeholder="RED BET"
+              value={betRed}
+              onChange={(e) => setBetRed(e.target.value)}
+              className="text-black px-3 py-2 rounded w-full border border-gray-300"
+            />
+          </div>
+          <div>
+            <label className="block text-sm mb-1 text-yellow-200">Black Bet</label>
+            <input
+              type="number"
+              placeholder="BLACK BET"
+              value={betBlack}
+              onChange={(e) => setBetBlack(e.target.value)}
+              className="text-black px-3 py-2 rounded w-full border border-gray-300"
+            />
+          </div>
+          <div>
+            <label className="block text-sm mb-1 text-yellow-200">Suit Finish</label>
+            <input
+              type="number"
+              placeholder="SUIT FINISH BET"
+              value={betSuit}
+              onChange={(e) => setBetSuit(e.target.value)}
+              className="text-black px-3 py-2 rounded w-full border border-gray-300"
+            />
+          </div>
+          <div>
+            <label className="block text-sm mb-1 text-yellow-200">Straight Strike</label>
+            <input
+              type="number"
+              placeholder="STRAIGHT BET"
+              value={betStraight}
+              onChange={(e) => setBetStraight(e.target.value)}
+              className="text-black px-3 py-2 rounded w-full border border-gray-300"
+            />
+          </div>
         </div>
-        <div>
-          <label className="block text-sm mb-1">Black Bet</label>
-          <input
-            type="number"
-            placeholder="Enter Black Bet"
-            value={betBlack}
-            onChange={(e) => setBetBlack(e.target.value)}
-            className="text-black px-2 py-1 rounded w-full"
-          />
+
+        <div className="flex justify-center mb-4">
+          <button onClick={startCountdown} className="bg-yellow-400 hover:bg-yellow-300 text-black font-bold px-6 py-3 rounded shadow">
+            START BETTING
+          </button>
         </div>
-        <div>
-          <label className="block text-sm mb-1">Suit Finish Bet</label>
-          <input
-            type="number"
-            placeholder="Enter Suit Finish Bet"
-            value={betSuit}
-            onChange={(e) => setBetSuit(e.target.value)}
-            className="text-black px-2 py-1 rounded w-full"
-          />
+
+        {isCounting && <p className="text-center text-xl text-red-300 font-semibold mb-2">Countdown: {countdown}s</p>}
+        {winner && <p className="text-center text-3xl text-yellow-500 font-bold mb-4">🏆 {winner.toUpperCase()} WINS!</p>}
+
+        <div className="bg-black p-4 rounded-xl h-48 overflow-y-auto text-green-300 text-sm border border-green-700">
+          {log.map((line, i) => <div key={i} dangerouslySetInnerHTML={{ __html: line }} />)}
         </div>
-        <div>
-          <label className="block text-sm mb-1">Straight Strike Bet</label>
-          <input
-            type="number"
-            placeholder="Enter Straight Bet"
-            value={betStraight}
-            onChange={(e) => setBetStraight(e.target.value)}
-            className="text-black px-2 py-1 rounded w-full"
-          />
-        </div>
-      </div>
-
-      <div className="flex justify-center">
-        <button onClick={startCountdown} className="bg-yellow-400 text-black px-4 py-2 rounded">
-          Start Betting
-        </button>
-      </div>
-
-      {isCounting && <p className="text-center text-lg text-red-400 mt-2">Countdown: {countdown}s</p>}
-
-      {winner && <p className="text-center text-2xl font-bold mt-4">{winner.toUpperCase()} Wins!</p>}
-
-      <div className="bg-black mt-4 p-2 rounded h-40 overflow-y-auto text-green-400 text-sm">
-        {log.map((line, i) => <div key={i} dangerouslySetInnerHTML={{ __html: line }} />)}
       </div>
     </div>
   );
