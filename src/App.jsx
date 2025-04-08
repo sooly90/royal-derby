@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import redHorse from './assets/red-horse.png';
+import blackHorse from './assets/black-horse.png';
 
 const suits = ['♠', '♥', '♦', '♣'];
 const values = Array.from({ length: 13 }, (_, i) => i + 2);
@@ -31,10 +33,10 @@ export default function App() {
   const [blackPos, setBlackPos] = useState(0);
   const [lastCard, setLastCard] = useState(null);
   const [winner, setWinner] = useState(null);
-  const [betRed, setBetRed] = useState('');
-  const [betBlack, setBetBlack] = useState('');
-  const [betSuit, setBetSuit] = useState('');
-  const [betStraight, setBetStraight] = useState('');
+  const [betRed, setBetRed] = useState(0);
+  const [betBlack, setBetBlack] = useState(0);
+  const [betSuit, setBetSuit] = useState(0);
+  const [betStraight, setBetStraight] = useState(0);
   const [countdown, setCountdown] = useState(10);
   const [isCounting, setIsCounting] = useState(false);
 
@@ -93,17 +95,24 @@ export default function App() {
     setBlackPos(0);
     setLastCard(null);
     setWinner(null);
-    setLog([`🏁 Race Started! Bet: RED ${betRed || 0} / BLACK ${betBlack || 0} / SUIT ${betSuit || 0} / STRAIGHT ${betStraight || 0}`]);
+    setLog([`🏁 Race Started! BET: RED ${betRed} / BLACK ${betBlack} / SUIT ${betSuit} / STRAIGHT ${betStraight}`]);
+  };
+
+  const addChips = (color, amount) => {
+    if (color === 'red') setBetRed(prev => prev + amount);
+    if (color === 'black') setBetBlack(prev => prev + amount);
   };
 
   const Track = ({ position, color }) => (
     <div className="flex gap-2 items-center mb-2">
       {[0, 1, 2, 3, 4].map(i => (
-        <div key={i} className="w-16 h-16 bg-green-800 border-2 rounded flex items-center justify-center shadow-lg">
+        <div key={i} className="w-20 h-20 bg-transparent border border-yellow-400 rounded flex items-center justify-center">
           {i === position && (
-            <span className={`text-lg font-black ${color === 'red' ? 'text-red-400' : 'text-gray-300'}`}>
-              {color === 'red' ? 'RED HORSE' : 'BLACK HORSE'}
-            </span>
+            <img
+              src={color === 'red' ? redHorse : blackHorse}
+              alt={`${color} horse`}
+              className="w-16 h-16 object-contain"
+            />
           )}
         </div>
       ))}
@@ -111,65 +120,56 @@ export default function App() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-900 via-green-800 to-green-900 p-6 text-white font-mono">
-      <div className="max-w-2xl mx-auto bg-green-950 shadow-xl rounded-xl p-6 border border-yellow-300">
-        <h1 className="text-4xl text-center text-yellow-400 font-bold mb-6 drop-shadow">ROYAL DERBY</h1>
-        <Track position={redPos} color="red" />
-        <Track position={blackPos} color="black" />
+    <div className="min-h-screen bg-green-900 text-yellow-300 font-serif p-6">
+      <div className="max-w-5xl mx-auto border-4 border-yellow-500 rounded-xl shadow-xl bg-green-800 p-8">
+        <h1 className="text-5xl font-bold text-center mb-6">ROYAL DERBY</h1>
 
-        <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="flex justify-around items-start mb-8">
           <div>
-            <label className="block text-sm mb-1 text-yellow-200">Red Bet</label>
-            <input
-              type="number"
-              placeholder="RED BET"
-              value={betRed}
-              onChange={(e) => setBetRed(e.target.value)}
-              className="text-black px-3 py-2 rounded w-full border border-gray-300"
-            />
+            <Track position={blackPos} color="black" />
+            <p className="text-center mt-2 font-semibold">BLACK</p>
+          </div>
+          <div className="text-center">
+            {lastCard && (
+              <div className="text-4xl mb-2">{lastCard.suit}{valueToDisplay(lastCard.value)}</div>
+            )}
+            {!winner && (
+              <button onClick={startCountdown} className="bg-yellow-400 text-black font-bold py-2 px-6 rounded">
+                START BETTING
+              </button>
+            )}
+            {isCounting && <div className="text-2xl mt-2">{countdown}</div>}
           </div>
           <div>
-            <label className="block text-sm mb-1 text-yellow-200">Black Bet</label>
-            <input
-              type="number"
-              placeholder="BLACK BET"
-              value={betBlack}
-              onChange={(e) => setBetBlack(e.target.value)}
-              className="text-black px-3 py-2 rounded w-full border border-gray-300"
-            />
-          </div>
-          <div>
-            <label className="block text-sm mb-1 text-yellow-200">Suit Finish</label>
-            <input
-              type="number"
-              placeholder="SUIT FINISH BET"
-              value={betSuit}
-              onChange={(e) => setBetSuit(e.target.value)}
-              className="text-black px-3 py-2 rounded w-full border border-gray-300"
-            />
-          </div>
-          <div>
-            <label className="block text-sm mb-1 text-yellow-200">Straight Strike</label>
-            <input
-              type="number"
-              placeholder="STRAIGHT BET"
-              value={betStraight}
-              onChange={(e) => setBetStraight(e.target.value)}
-              className="text-black px-3 py-2 rounded w-full border border-gray-300"
-            />
+            <Track position={redPos} color="red" />
+            <p className="text-center mt-2 font-semibold">RED</p>
           </div>
         </div>
 
-        <div className="flex justify-center mb-4">
-          <button onClick={startCountdown} className="bg-yellow-400 hover:bg-yellow-300 text-black font-bold px-6 py-3 rounded shadow">
-            START BETTING
-          </button>
+        <div className="grid grid-cols-4 gap-6 text-center mb-8">
+          <div>
+            <p className="mb-2">🔴 RED</p>
+            <button onClick={() => addChips('red', 5)} className="bg-red-600 px-4 py-2 rounded-full">+5</button>
+            <p className="mt-1">Bet: {betRed}</p>
+          </div>
+          <div>
+            <p className="mb-2">⚫ BLACK</p>
+            <button onClick={() => addChips('black', 5)} className="bg-black text-white px-4 py-2 rounded-full">+5</button>
+            <p className="mt-1">Bet: {betBlack}</p>
+          </div>
+          <div>
+            <p className="mb-2">SUIT FINISH</p>
+            <input type="number" value={betSuit} onChange={(e) => setBetSuit(+e.target.value)} className="text-black w-20 px-2 py-1 rounded" />
+          </div>
+          <div>
+            <p className="mb-2">STRAIGHT STRIKE</p>
+            <input type="number" value={betStraight} onChange={(e) => setBetStraight(+e.target.value)} className="text-black w-20 px-2 py-1 rounded" />
+          </div>
         </div>
 
-        {isCounting && <p className="text-center text-xl text-red-300 font-semibold mb-2">Countdown: {countdown}s</p>}
-        {winner && <p className="text-center text-3xl text-yellow-500 font-bold mb-4">🏆 {winner.toUpperCase()} WINS!</p>}
+        {winner && <p className="text-center text-3xl font-bold text-yellow-400 mb-4">🏆 {winner.toUpperCase()} WINS!</p>}
 
-        <div className="bg-black p-4 rounded-xl h-48 overflow-y-auto text-green-300 text-sm border border-green-700">
+        <div className="bg-black text-green-300 p-4 rounded h-40 overflow-y-auto text-sm border border-green-600">
           {log.map((line, i) => <div key={i} dangerouslySetInnerHTML={{ __html: line }} />)}
         </div>
       </div>
